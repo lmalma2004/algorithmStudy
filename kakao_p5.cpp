@@ -8,7 +8,7 @@ bool isPossible(int n, const vector<int>& stones, int k) {
 			currLength++;
 		else
 			currLength = 0;
-		if (currLength > k)
+		if (currLength >= k)
 			return false;
 	}
 	return true;
@@ -23,7 +23,7 @@ int solution(vector<int> stones, int k) {
 		else
 			hi = mid - 1;
 	}
-	return hi;
+	return lo;
 }
 int main() {
 	vector<int> stones = { 2,4,5,3,2,1,4,2,5,1 };
