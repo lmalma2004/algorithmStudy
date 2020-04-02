@@ -4,179 +4,218 @@
 #include <algorithm>
 #include <map>
 #include <set>
+#define HORI  0
+#define VERTI 1
 using namespace std;
 
 class Bus {
 public:
-   int id;
-   int startRow;
-   int startCol;
-   int endRow;
-   int endCol;
-   vector<pair<int, int>> locList;
-   set<int> busList;
-   bool isCalLocList;
-   Bus(int i, int sr, int sc, int er, int ec) {
-      isCalLocList = false;
-      id = i;
-      startRow = sr;
+    int direc;
+    int startRow;
+    int startCol;
+    int endRow;
+    int endCol;
+    vector<pair<int, int>> locList;
+    set<int> busList;
+    Bus() {
+    }
+    Bus(int sr, int sc, int er, int ec) {
+        startRow = min(sr, er);
 #include <iostream>
 #include <vector>
 #include <queue>
 #include <algorithm>
 #include <map>
 #include <set>
+#define HORI  0
+#define VERTI 1
 using namespace std;
 
 class Bus {
 public:
-   int id;
-   int startRow;
-   int startCol;
-   int endRow;
-   int endCol;
-   vector<pair<int, int>> locList;
-   set<int> busList;
-   bool isCalLocList;
-   Bus(int i, int sr, int sc, int er, int ec) {
-      isCalLocList = false;
-      id = i;
-      startRow = sr;
-      startCol = sc;
-      endRow = er;
-      endCol = ec;
-   }
-   Bus() {
-      isCalLocList = false;
-   }
-   //row, col에 있는 승객을 태울수 있는지
-   bool isPossible(int row, int col) {
-      if (startRow <= row && row <= endRow && startCol <= col && col <= endCol)
-         return true;
-      return false;
-   }
-   void calLocList() {
-      isCalLocList = true;
-      for (int r = startRow; r <= endRow; r++)
-         for (int c = startCol; c <= endCol; c++) {
-            locList.push_back(make_pair(r, c));
-         }
-   }
+    int direc;
+    int startRow;
+    int startCol;
+    int endRow;
+    int endCol;
+    vector<pair<int, int>> locList;
+    set<int> busList;
+    Bus() {
+    }
+    Bus(int sr, int sc, int er, int ec) {
+        startRow = min(sr, er);
+        startCol = min(sc, ec);
+        endRow = max(sr, er);
+        endCol = max(sc, ec);
+        if (sr == er)
+            direc = HORI;
+        else
+            direc = VERTI;
+    }
+    //row, col에 있는 승객을 태울수 있는지
+    bool isPossible(int row, int col) {
+        if (startRow <= row && row <= endRow && startCol <= col && col <= endCol)
+            return true;
+        return false;
+    }
 };
-class Loc {
+class BusState {
 public:
-   int busCnt;
-   int currBus; //현재 탑승한 버스
+    int busCnt;
+    int bus; //현재 탑승한 버스
 public:
-   Loc(int bc, int cb) {
-      busCnt = bc;
-      currBus = cb;
-   }
+    BusState(int bc, int cb) {
+        busCnt = bc;
+        bus = cb;
+    }
 };
-
-int n, m;
-int k;
 int startRow;
 int startCol;
 int endRow;
 int endCol;
-static int maxBusId = 0;
-static Bus busses[5001];
+int maxBusId;
+int minCnt = 5001;
+Bus busses[5001];
 bool visited[5001];
 
-void pushBus(int row, int col, int currBus) {
-   for (int i = 1; i <= maxBusId; i++) {
-      if (busses[i].isPossible(row, col) && i != currBus)
-         busses[i].busList.insert(currBus);
-   }
+vector<int> getBusList(int row, int col) {
+    vector<int> ret;
+    for (int i = 1; i <= maxBusId; i++) {
+        if (busses[i].isPossible(row, col))
+            ret.push_back(i);
+    }
+    return ret;
 }
 
+bool isTransfer(int bus1, int bus2) {
+    int direc1 = busses[bus1].direc;
+    int direc2 = busses[bus2].direc;
+
+    if (direc1 == VERTI && direc2 == VERTI) {
+        if (busses[bus1].startCol != busses[bus2].startCol)
+            return false;
+        if (busses[bus2].startRow <= busses[bus1].startRow && busses[bus1].startRow <= busses[bus2].endRow)
+            return true;
+        if (busses[bus2].startRow <= busses[bus1].endRow && busses[bus1].endRow <= busses[bus2].endRow)
+            return true;
+        if (busses[bus1].startRow <= busses[bus2].startRow && busses[bus2].startRow <= busses[bus1].endRow)
+            return true;
+        if (busses[bus1].startRow <= busses[bus2].endRow && busses[bus2].endRow <= busses[bus1].endRow)
+            return true;
+        return false;
+    }
+    else if (direc1 == VERTI && direc2 == HORI) {
+        if (busses[bus1].startCol > busses[bus2].endCol)
+            return false;
+        if (busses[bus1].startCol < busses[bus2].startCol)
+            return false;
+        if (busses[bus2].startRow > busses[bus1].endRow)
+            return false;
+        if (busses[bus2].startRow < busses[bus1].startRow)
+            return false;
+        return true;
+    }
+    else if (direc1 == HORI && direc2 == VERTI) {
+        if (busses[bus2].startCol > busses[bus1].endCol)
+            return false;
+        if (busses[bus2].startCol < busses[bus1].startCol)
+            return false;
+        if (busses[bus1].startRow > busses[bus2].endRow)
+            return false;
+        if (busses[bus1].startRow < busses[bus2].startRow)
+            return false;
+        return true;
+    }
+    else if (direc1 == HORI && direc2 == HORI) {
+        if (busses[bus1].startRow != busses[bus2].startRow)
+            return false;
+        if (busses[bus2].startCol <= busses[bus1].startCol && busses[bus1].startCol <= busses[bus2].endCol)
+            return true;
+        if (busses[bus2].startCol <= busses[bus1].endCol && busses[bus1].endCol <= busses[bus2].endCol)
+            return true;
+        if (busses[bus1].startCol <= busses[bus2].startCol && busses[bus2].startCol <= busses[bus1].endCol)
+            return true;
+        if (busses[bus1].startCol <= busses[bus2].endCol && busses[bus2].endCol <= busses[bus1].endCol)
+            return true;
+        return false;
+    }
+}
+
+void calBusList(int bus) {
+    for (int i = 1; i <= maxBusId; i++) {
+        if (i == bus)
+            continue;
+        if (isTransfer(bus, i)) 
+            busses[bus].busList.insert(i);        
+    }
+}
 class compare {
 public:
-   bool operator()(const Loc& l1, const Loc& l2) {
-      return l1.busCnt > l2.busCnt;
-   }
+    bool operator()(const BusState& l1, const BusState& l2) {
+        return l1.busCnt > l2.busCnt;
+    }
 };
 
-vector<int> getBusList(int row, int col) {
-   vector<int> ret;
-   for (int i = 1; i <= maxBusId; i++) {
-      if (busses[i].isPossible(row, col))
-         ret.push_back(i);
-   }
-   return ret;
-}
-
-int minCnt = 5001;
 int getMinBusCnt(int bus) {
+    if (busses[bus].isPossible(endRow, endCol))
+        return 1;
 
-   visited[bus] = true;
-   static priority_queue<Loc, vector<Loc>, compare> pq;
+    priority_queue<BusState, vector<BusState>, compare> pq;
+    visited[bus] = true;
+    calBusList(bus);
 
-   for (auto b = busses[bus].busList.begin(); b != busses[bus].busList.end(); b++) {
-      int currBus = *b;
-      visited[currBus] = true;
-      Loc newLoc(1, currBus);
-      pq.push(newLoc);
-   }
+    for (auto b = busses[bus].busList.begin(); b != busses[bus].busList.end(); b++) {
+        int nextBus = *b;
+        visited[nextBus] = true;
+        BusState newState(2, nextBus);
+        pq.push(newState);
+    }
 
-   while (!pq.empty()) {
-      Loc currLoc = pq.top(); pq.pop();
-      if (currLoc.busCnt >= minCnt)
-         return minCnt;
-      if (busses[currLoc.currBus].isPossible(endRow, endCol))
-         return currLoc.busCnt;
-      for (auto b = busses[currLoc.currBus].busList.begin(); b != busses[currLoc.currBus].busList.end(); b++) {
-         int currBus = *b;
-         if (!visited[currBus]) {
-            visited[currBus] = true;
-            Loc newLoc(currLoc.busCnt + 1, currBus);
-            pq.push(newLoc);
-         }
-      }   
-   }
-   return 5001;
+    while (!pq.empty()) {
+        BusState currBusState = pq.top(); pq.pop();
+        if (currBusState.busCnt >= minCnt)
+            return minCnt;
+        if (busses[currBusState.bus].isPossible(endRow, endCol))
+            return currBusState.busCnt;
+
+        calBusList(currBusState.bus);
+        for (auto b = busses[currBusState.bus].busList.begin(); b != busses[currBusState.bus].busList.end(); b++) {
+            int nextBus = *b;
+            if (!visited[nextBus]) {
+                visited[nextBus] = true;
+                BusState newState(currBusState.busCnt + 1, nextBus);
+                pq.push(newState);
+            }
+        }
+    }
+    return minCnt;
 }
 
 int solve() {
-   //startRow, startCol에서 탈 수 있는 버스들을 구해서 타본다.
-   for (int i = 1; i < maxBusId; i++) {
-      busses[i].calLocList();
-      for (int j = 0; j < busses[i].locList.size(); j++) {
-         int row = busses[i].locList[j].first;
-         int col = busses[i].locList[j].second;
-         pushBus(row, col, i);
-      }
-   }
-
-   vector<int> busList = getBusList(startRow, startCol);
-   for (int i = 0; i < busList.size(); i++) {
-      for (int j = 0; j < 5001; j++)
-         visited[j] = false;
-      //row, col에서 i번 버스를 탓을때 최소버스값
-      int currBus = busList[i];
-      int currCnt = 5001;
-      currCnt = 1 + getMinBusCnt(busList[i]);
-      minCnt = min(currCnt, minCnt);
-   }
-   return minCnt;
+    vector<int> busList = getBusList(startRow, startCol);
+    for (int i = 0; i < busList.size(); i++) {
+        for (int j = 1; j <= maxBusId; j++)
+            visited[j] = false;
+        int bus = busList[i];
+        int cnt = 5001;
+        cnt = getMinBusCnt(bus);
+        minCnt = min(cnt, minCnt);
+    }
+    return minCnt;
 }
 
 int main() {
-   scanf("%d %d", &m, &m);
-   scanf("%d", &k);
-   for (int i = 0; i < k; i++) {
-      int id, sr, sc, er, ec;
-      scanf("%d %d %d %d %d", &id, &sc, &sr, &ec, &er);
-      Bus bus(id, sr - 1, sc - 1, er - 1, ec - 1);
-      busses[id] = bus;
-      maxBusId = max(maxBusId, id);
-   }
-   scanf("%d %d %d %d", &startCol, &startRow, &endCol, &endRow);
-   startRow--;
-   startCol--;
-   endRow--;
-   endCol--;
-   printf("%d", solve());
-   return 0;
+    int n, m;
+    scanf("%d %d", &n, &m);
+    scanf("%d", &maxBusId);
+    for (int i = 1; i <= maxBusId; i++) {
+        int id, sr, sc, er, ec;
+        scanf("%d %d %d %d %d", &id, &sc, &sr, &ec, &er);
+        Bus bus(sr - 1, sc - 1, er - 1, ec - 1);
+        busses[id] = bus;
+    }
+    scanf("%d %d %d %d", &startCol, &startRow, &endCol, &endRow);
+    startRow--; startCol--; endRow--; endCol--;
+    printf("%d\n", solve());
+    return 0;
 }
