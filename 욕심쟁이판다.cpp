@@ -10,7 +10,7 @@ int moveCol[4] = { 0, 1, 0 ,-1 };
 int memo[MAX][MAX];
 
 bool isPossible(int row, int col, int preTree) {
-	if (maps[row][col] < preTree)
+	if (maps[row][col] <= preTree)
 		return false;
 	return true;
 }
