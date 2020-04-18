@@ -1,7 +1,7 @@
 #include <iostream>
 #include <string>
+#include <string.h>
 #include <queue>
-#include <map>
 using namespace std;
 
 int T;
@@ -37,29 +37,32 @@ void swapString(string& s, int a, int b) {
 	s[b] = tmp;
 }
 
-int solve() {
+long long solve() {
 	queue<int> lenList;
 	int len = 0;
 	int startLen = findNotMatchLoc(s, t, 0);
+	int lastTargetLen = startLen;
 	memset(visited, false, sizeof(bool) * s.length());
 	lenList.push(startLen);
 	visited[startLen] = true;
 
-	int sum = 0;
+	long long sum = 0;
 	while (len < s.length()) {
 		while (!lenList.empty()) {
 			len = lenList.front(); lenList.pop();
 			if (s[len] == t[len])
 				continue;
 			char target = t[len];
-			int targetLen = findTarget(s, t, len + 1, target, lenList);
+			int targetLen = findTarget(s, t, lastTargetLen, target, lenList);
+			lastTargetLen = targetLen;
 			swapString(s, len, targetLen);
-			int swapCnt = targetLen - len;
+			long long swapCnt = targetLen - len;
 			sum += swapCnt;
 			len = targetLen;
 		}
 		len = findNotMatchLoc(s, t, len);
 		lenList.push(len);
+		lastTargetLen = len;
 	}
 	return sum;
 }
@@ -69,8 +72,7 @@ int main() {
 	for (int tc = 1; tc <= T; tc++) {
 		cin >> s;
 		cin >> t;
-		printf("#%d %d\n", tc, solve());
+		printf("#%d %lld\n", tc, solve());
 	}
 	return 0;
 }
-
