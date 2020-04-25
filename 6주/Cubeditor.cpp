@@ -61,28 +61,33 @@ int kmpSearch(const string& H, const string& N) {
     return ret;
 }
 
-vector<string> getCands(string& s, int len) {
-    vector<string> ret;
+bool isPossible(string& s, int len) {
+    map<string, bool> memo;
     for (int i = 0; i <= s.length() - len; i++) {
-        string cand = s.substr(i, i + len);
-        ret.push_back(cand);
+        string subStr = s.substr(i, len);
+        if (memo[subStr])
+            continue;
+        memo[subStr] = true;
+        int cnt = kmpSearch(s, subStr);
+        if (cnt >= 2)
+            return true;
     }
-    return ret;
+    return false;
 }
 
 int solve(string& s) {
-    for (int len = s.length(); len >= 1; len--) {
-        map<string, bool> memo;
-        for (int i = 0; i <= s.length() - len; i++) {
-            string subStr = s.substr(i, i + len);
-            if (memo[subStr])
-                continue;
-            memo[subStr] = true;
-            int cnt = kmpSearch(s, subStr);
-            if (cnt >= 2)
-                return len;
-        }            
+    int lo = 1;
+    int hi = s.length();
+    while (lo <= hi) {
+        int mid = (lo + hi) / 2;
+        if (isPossible(s, mid)) {
+            lo = mid + 1;
+        }
+        else {
+            hi = mid - 1;
+        }
     }
+    return hi;
 }
 
 int main() {
