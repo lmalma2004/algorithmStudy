@@ -9,4 +9,6 @@
 
 - 4주차 -  SegmentTree, Greedy
 - 5주차 -  Bellman-Ford, Floyd Warshall, KMP
+- 6주차 -  Topological Sort, LCS algorithm
+- 7주차 -  suffix array, LIS algorithm
 
