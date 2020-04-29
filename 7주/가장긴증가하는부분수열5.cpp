@@ -16,24 +16,22 @@ vector<int> getArr(int idx) {
 	vector<int> ret;
 	ret.push_back(curr);
 
-	int nextIdx = -1;
+	vector<int> origRet = ret;
+
 	for (int i = idx + 1; i < arr.size(); i++) {
 		int next = arr[i];
 		if (curr < next) {
-			nextIdx = i;
-			break;
+			vector<int> nextArr = getArr(i);
+			nextArr.insert(nextArr.begin(), origRet.begin(), origRet.end());
+			if (ret.size() < nextArr.size()) {
+				ret = nextArr;
+				memo[i] = ret;
+			}				
 		}
 	}
 
-	if (nextIdx == -1) {
-		memo[idx] = ret;
-		return ret;
-	}
-	vector<int> nextArr = getArr(nextIdx);
-	ret.insert(ret.end(), nextArr.begin(), nextArr.end());
-
 	memo[idx] = ret;
-	return ret;
+	return ret;	
 }
 int main() {
 	scanf("%d", &N);
